@@ -20,6 +20,23 @@
 - ロールチェーンは最大1時間。コンソールのクロスアカウントスイッチロールも同じ仕組み
 - **IAM Access Analyzer**: 外部プリンシパルからアクセス可能なリソースを検出(組織をゾーンオブトラストに)
 
+### シーケンス: クロスアカウント AssumeRole(ExternalId 付き)
+
+```mermaid
+sequenceDiagram
+    participant U as アカウント A のプリンシパル<br>(ユーザー/アプリ)
+    participant STS as AWS STS
+    participant R as アカウント B の IAM ロール
+    participant S3 as アカウント B の S3
+
+    Note over R: 信頼ポリシー:<br>Principal = アカウント A<br>Condition: sts:ExternalId = "abc123"
+    U->>STS: sts:AssumeRole<br>(RoleArn + ExternalId)
+    Note over U: A 側でも AssumeRole の<br>Allow が必要(両側の許可)
+    STS-->>U: 一時認証情報(最長 12h、<br>ロールチェーンは 1h)
+    U->>S3: 一時認証情報で API 呼び出し
+    S3-->>U: ロールの権限の範囲で応答
+```
+
 ## ポリシー評価ロジック(暗記必須)
 
 ```
@@ -30,6 +47,19 @@
 - **SCP**: アカウント内の**最大権限**を制限(root にも効く)。権限は付与しない。管理アカウントには効かない
 - **Permissions Boundary**: 特定 IAM ユーザー/ロールの最大権限。「開発者に IAM ロール作成を許可しつつ、作れる権限の上限を設定」→ Permissions Boundary — 頻出
 - リソースベースポリシーは同一アカウント内ならアイデンティティポリシーと OR 評価、クロスアカウントは**両方必要**
+
+```mermaid
+flowchart TD
+    START(["リクエスト"]) --> DENY{"どこかに<br>明示的 Deny?"}
+    DENY -->|あり| NG1["拒否(必ず勝つ)"]
+    DENY -->|なし| SCP{"SCP で<br>許可されている?"}
+    SCP -->|いいえ| NG2["拒否"]
+    SCP -->|はい| PB{"Permissions Boundary<br>があれば範囲内?"}
+    PB -->|範囲外| NG3["拒否"]
+    PB -->|"範囲内 or 未設定"| ALLOW{"アイデンティティ or<br>リソースポリシーに Allow?"}
+    ALLOW -->|なし| NG4["拒否(暗黙の Deny)"]
+    ALLOW -->|あり| OK["許可"]
+```
 
 ## フェデレーション(企業 ID 連携)
 
@@ -52,6 +82,31 @@
 - VPC Flow Logs / DNS クエリログも集約バケットへ
 
 **定番の3アカウント**: Log Archive(改ざん防止の証跡保管)/ Security Tooling(GuardDuty 等の委任管理者)/ Audit。Control Tower はこれを自動セットアップする。
+
+```mermaid
+flowchart LR
+    subgraph members["全メンバーアカウント"]
+        M1["アカウント 1<br>CloudTrail / Config /<br>GuardDuty / VPC Flow Logs"]
+        M2["アカウント 2"]
+        M3["アカウント N"]
+    end
+    subgraph mgmt["管理アカウント"]
+        ORG["Organizations<br>組織トレイル / 委任設定"]
+    end
+    subgraph logarchive["Log Archive アカウント"]
+        S3L["集約 S3 バケット<br>(Object Lock で改ざん防止)"]
+    end
+    subgraph sec["Security Tooling アカウント(委任管理者)"]
+        HUB["Security Hub / GuardDuty /<br>Config アグリゲーター"]
+    end
+    M1 -->|証跡・ログ| S3L
+    M2 -->|証跡・ログ| S3L
+    M3 -->|証跡・ログ| S3L
+    M1 -->|findings| HUB
+    M2 -->|findings| HUB
+    M3 -->|findings| HUB
+    ORG -.->|"組織トレイル定義<br>(メンバーは停止不可)"| members
+```
 
 ## データ境界 (Data Perimeter)
 

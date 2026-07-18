@@ -19,6 +19,17 @@
 
 - SCP は**ガードレール(最大権限の制限)**。Allow を書いても権限は付与されない
 - 評価: ルートから対象アカウントまでの**全階層で許可されている必要がある**(FullAWSAccess を外すと deny-list 方式から allow-list 方式になる)
+
+```mermaid
+flowchart LR
+    subgraph concept["実効権限 = SCP ∩ IAM ポリシー(積集合)"]
+        SCPBOX["SCP が許可する範囲<br>(組織が定めた上限)"]
+        IAMBOX["IAM ポリシーの Allow<br>(アカウント内で付与)"]
+        EFF(["実際に使える権限<br>= 両方が許可した部分のみ"])
+    end
+    SCPBOX --> EFF
+    IAMBOX --> EFF
+```
 - 定番 SCP 例:
   - リージョン制限: `Deny` + `aws:RequestedRegion` 条件(グローバルサービス除外)
   - **CloudTrail / Config の無効化禁止**: `cloudtrail:StopLogging` 等を Deny
@@ -41,6 +52,22 @@ Root
 
 - **環境(prod/dev)で OU を分ける**のが基本(会社の組織図をそのまま写さない)
 - ネットワークアカウントに TGW / DX / Resolver を集約し、**RAM で共有**するのが定番
+
+```mermaid
+flowchart TD
+    ROOT(["Root"])
+    ROOT --> SEC["Security OU"]
+    SEC --> LOG["Log Archive<br>集約証跡・Object Lock"]
+    SEC --> TOOL["Security Tooling<br>GuardDuty 等の委任管理者"]
+    ROOT --> INFRA["Infrastructure OU"]
+    INFRA --> NET["Network<br>TGW・DX・Resolver を RAM 共有"]
+    INFRA --> SHARED["Shared Services<br>AD・CI/CD・golden AMI"]
+    ROOT --> WORK["Workloads OU"]
+    WORK --> PROD["Prod OU<br>厳格な SCP"]
+    WORK --> SDLC["SDLC OU<br>dev / test"]
+    ROOT --> SAND["Sandbox OU<br>緩い SCP + 予算上限"]
+    ROOT --> SUS["Suspended OU<br>全拒否 SCP"]
+```
 
 ## AWS Control Tower
 

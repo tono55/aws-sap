@@ -24,6 +24,36 @@
 
 **判断基準**: 「今すぐ・安く」→ VPN。「安定帯域・大容量・低レイテンシー」→ DX。「DX の障害に備えつつ安価に」→ DX + VPN フェイルオーバー。「暗号化必須の DX」→ DX 上に VPN。
 
+### 定番構成図: ハブ&スポーク型ハイブリッドネットワーク
+
+```mermaid
+flowchart LR
+    subgraph onprem["オンプレミス DC"]
+        CGW["カスタマー<br>ゲートウェイ"]
+        DNS1["社内 DNS"]
+    end
+    subgraph network["ネットワークアカウント(共有)"]
+        DXGW["DX Gateway"]
+        TGW["Transit Gateway<br>(RAM で組織に共有)"]
+        RSLV["Route 53 Resolver<br>エンドポイント"]
+    end
+    subgraph accounts["各ワークロードアカウント"]
+        VPCA["VPC A (Prod)"]
+        VPCB["VPC B (Dev)"]
+        VPCC["VPC C (共有サービス)"]
+    end
+    CGW ==>|"Direct Connect<br>(Transit VIF)"| DXGW
+    CGW -.->|"Site-to-Site VPN<br>(バックアップ)"| TGW
+    DXGW --> TGW
+    TGW --> VPCA
+    TGW --> VPCB
+    TGW --> VPCC
+    RSLV --- TGW
+    DNS1 -.->|"DNS フォワード"| RSLV
+```
+
+- TGW ルートテーブルで「Prod と Dev は相互通信不可、共有サービスへは両方可」のようなセグメンテーションを行う
+
 ## VPC 間接続の選択(最頻出)
 
 | 方式 | スケール | 特徴 |
@@ -40,6 +70,20 @@
 - 「**自社サービスを他アカウント/他社に公開**(全ネットワークは見せない)」「**CIDR が重複**」→ **PrivateLink**
 - 「SaaS プロバイダーとして数千顧客に提供」→ PrivateLink(エンドポイントサービス)
 
+### 決定木: VPC 間接続方式の選択
+
+```mermaid
+flowchart TD
+    Q1{"接続したいのは<br>ネットワーク全体?<br>特定サービスだけ?"}
+    Q1 -->|"特定サービスのみ<br>(または CIDR 重複)"| PL["PrivateLink<br>(エンドポイントサービス)"]
+    Q1 -->|ネットワーク全体| Q2{"VPC の数は?"}
+    Q2 -->|"2〜3 個<br>今後も増えない"| PEER["VPC Peering<br>(最安・非推移)"]
+    Q2 -->|"多数 or 今後増える<br>オンプレ接続もある"| Q3{"複数リージョン・拠点を<br>ポリシーで統合管理?"}
+    Q3 -->|単一リージョン中心| TGW["Transit Gateway<br>(+リージョン間はピアリング)"]
+    Q3 -->|グローバル統合| CWAN["Cloud WAN"]
+    Q1 -->|"サブネット自体を<br>複数アカウントで共用"| SHARE["RAM で VPC 共有"]
+```
+
 ### TGW の設計ポイント
 
 - アタッチメント: VPC / VPN / DX (Transit VIF) / TGW ピアリング / Connect (SD-WAN, GRE)
@@ -53,6 +97,27 @@
 - **Outbound Endpoint + 転送ルール**: AWS → オンプレの名前解決(`corp.example.com` はオンプレ DNS へ転送)
 - **Private Hosted Zone (PHZ) の共有**: 複数 VPC に関連付け(クロスアカウントは CLI/API で関連付け、または RAM で Resolver ルールを共有)
 - 定番構成: **中央ネットワークアカウントに Resolver エンドポイントを集約**し、転送ルールを RAM で全アカウントへ共有
+
+```mermaid
+flowchart LR
+    subgraph onprem["オンプレミス"]
+        OD["社内 DNS サーバー<br>corp.example.com を保持"]
+        OC["オンプレのクライアント"]
+    end
+    subgraph vpc["VPC(中央ネットワークアカウント)"]
+        IN["Resolver<br>Inbound Endpoint"]
+        OUT["Resolver<br>Outbound Endpoint"]
+        R53["Route 53 Resolver<br>+ Private Hosted Zone"]
+        EC2["VPC 内クライアント"]
+    end
+    OC -->|"① aws.example.com を<br>問い合わせ(フォワード)"| IN
+    IN --> R53
+    EC2 -->|"② corp.example.com を<br>問い合わせ"| R53
+    R53 -->|"転送ルールに一致"| OUT
+    OUT -->|フォワード| OD
+```
+
+- **①オンプレ → AWS の解決 = Inbound**、**② AWS → オンプレの解決 = Outbound + 転送ルール**(向きの混同がひっかけの定番)
 
 ## IP アドレス設計
 

@@ -23,6 +23,15 @@
 
 **定番の組み合わせ**: 「部門別のコストダッシュボードを作りたい」→ **コスト配分タグ + CUR + Athena + QuickSight**。「請求書レベルで分けたい」→ アカウント分割(+ Cost Categories)。
 
+```mermaid
+flowchart LR
+    TAG["リソースにタグ付与<br>(タグポリシー + SCP で強制)"] --> ACT["コスト配分タグを有効化<br>(管理アカウント・遡及しない)"]
+    ACT --> CUR["CUR を S3 に出力<br>(リソース単位・時間単位)"]
+    CUR --> ATH["Athena でクエリ"]
+    ATH --> QS["QuickSight<br>部門別ダッシュボード"]
+    ACT --> CE["Cost Explorer<br>(GUI 分析・RI/SP 推奨)"]
+```
+
 ## タグ戦略(組織レベル)
 
 1. **タグポリシー**(Organizations)でキー・値の標準を定義(違反の検出)
@@ -47,6 +56,16 @@
 | 高額サービスの利用禁止 | SCP でサービス/インスタンスタイプを Deny(例: `ec2:InstanceType` 条件で大型を禁止) |
 | 予期しない急増の検知 | Cost Anomaly Detection |
 | 部門への請求転嫁 | コスト配分タグ / アカウント分割 / Billing Conductor |
+
+```mermaid
+flowchart LR
+    B["AWS Budgets<br>予算 (実績/予測) を監視"] -->|閾値 50% 超過| N1["SNS / メール通知"]
+    B -->|閾値 80% 超過| N2["Slack 等へエスカレーション<br>(SNS + Chatbot)"]
+    B -->|閾値 100% 超過| A["Budgets Actions(自動実行)"]
+    A --> A1["制限 SCP を OU に適用"]
+    A --> A2["IAM ポリシーで起動権限を剥奪"]
+    A --> A3["EC2 / RDS インスタンスを停止"]
+```
 
 ## 頻出のひっかけポイント
 

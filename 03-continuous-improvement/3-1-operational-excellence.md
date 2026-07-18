@@ -40,11 +40,33 @@
 
 ## イベント駆動の運用自動化
 
-```
-検知(CloudWatch アラーム / Config / GuardDuty / Health)
-  → ルーティング(EventBridge)
-  → 対応(SSM Automation / Lambda / Step Functions)
-  → 通知(SNS / ChatOps)
+```mermaid
+flowchart LR
+    subgraph detect["① 検知"]
+        CW["CloudWatch アラーム"]
+        CFG["Config ルール違反"]
+        GD["GuardDuty finding"]
+        HLTH["AWS Health イベント"]
+    end
+    EB["② EventBridge<br>(ルールでルーティング)"]
+    subgraph act["③ 対応(自動化)"]
+        SSM["SSM Automation<br>(修復ランブック)"]
+        LMB["Lambda"]
+        SFN["Step Functions<br>(多段・承認付き)"]
+    end
+    subgraph notify["④ 通知"]
+        SNS["SNS → メール / Chatbot"]
+        OPS["OpsCenter / Incident Manager"]
+    end
+    CW --> EB
+    CFG --> EB
+    GD --> EB
+    HLTH --> EB
+    EB --> SSM
+    EB --> LMB
+    EB --> SFN
+    EB --> SNS
+    SSM --> OPS
 ```
 
 - 例: 「EC2 の異常を検知したら自動で再起動/復旧」→ CloudWatch アラームの EC2 アクション(recover/reboot)

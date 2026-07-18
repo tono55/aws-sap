@@ -19,6 +19,19 @@
 | フロントエンド | CloudWatch RUM / Synthetics |
 | コスト対性能 | **Compute Optimizer**(EC2/EBS/Lambda の推奨) |
 
+### 診断フロー: どこが遅いかの切り分け
+
+```mermaid
+flowchart TD
+    START(["「遅い」という報告"]) --> Q1["X-Ray サービスマップで<br>どの区間が遅いか特定"]
+    Q1 -->|"DB 呼び出しが遅い"| DB["RDS Performance Insights<br>(待機イベント・トップ SQL)"]
+    Q1 -->|"アプリ処理が遅い"| APP["CloudWatch メトリクス<br>(CPU / メモリ / 同時実行)"]
+    Q1 -->|"外部 API / ネットワーク"| NET["VPC Flow Logs /<br>リージョン間レイテンシー確認"]
+    Q1 -->|"ユーザー側の体感のみ"| FE["CloudWatch RUM / Synthetics<br>(エッジ配信・CloudFront 検討)"]
+    DB --> FIX1["インデックス / リードレプリカ /<br>キャッシュ導入"]
+    APP --> FIX2["ライトサイジング / スケール /<br>非同期化"]
+```
+
 ## 定番の改善パターン(現状 → 改善)
 
 | 現状の問題 | 改善 |

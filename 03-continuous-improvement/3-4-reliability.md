@@ -22,6 +22,24 @@
 | cron を1台の EC2 で実行 | **EventBridge Scheduler + Lambda/ECS タスク**(サーバーレス化) |
 | 同期的な密結合(直接 API 呼び出しの連鎖) | SQS/SNS/EventBridge で疎結合化 |
 
+### Before / After: 定番の SPOF 排除
+
+```mermaid
+flowchart TB
+    subgraph before["Before(SPOF だらけ)"]
+        U1["ユーザー"] --> E1["EC2 1台<br>(アプリ+セッション+cron)"]
+        E1 --> D1["RDS シングル AZ"]
+    end
+    subgraph after["After(自己復旧する構成)"]
+        U2["ユーザー"] --> ALB["ALB(マルチ AZ)"]
+        ALB --> ASG["ASG: EC2 ×N<br>(複数 AZ・ELB ヘルスチェック)"]
+        ASG --> D2["RDS Multi-AZ"]
+        ASG --> RED["ElastiCache<br>(セッション外出し)"]
+        SCHED["EventBridge Scheduler<br>+ Lambda(cron 分離)"] --> D2
+    end
+    before ==>|改善| after
+```
+
 ## 自己復旧の仕組み
 
 - **ASG のヘルスチェック**: EC2 ステータス + **ELB ヘルスチェック連動**(`HealthCheckType: ELB`)でアプリレベル異常も置換

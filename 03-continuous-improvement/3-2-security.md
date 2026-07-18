@@ -21,6 +21,36 @@
 
 **判断基準**: 「EC2 が C&C サーバーと通信している」→ GuardDuty。「OS の CVE を継続スキャン」→ Inspector。「S3 に個人情報がないか」→ Macie。「複数アカウントの findings を1画面に」→ Security Hub(委任管理者)。「侵害の経緯を調査」→ Detective。
 
+```mermaid
+flowchart LR
+    subgraph src["データソース"]
+        CT["CloudTrail"]
+        FL["VPC Flow Logs / DNS ログ"]
+        EC2S["EC2 / ECR / Lambda"]
+        S3D["S3 オブジェクト"]
+        RC["リソース構成"]
+    end
+    subgraph engines["検知エンジン"]
+        GD["GuardDuty<br>(脅威)"]
+        INS["Inspector<br>(脆弱性)"]
+        MAC["Macie<br>(PII)"]
+        CFG["Config<br>(構成違反)"]
+    end
+    HUB["Security Hub<br>(集約 + 標準チェック)"]
+    DET["Detective<br>(調査・根本原因)"]
+    CT --> GD
+    FL --> GD
+    EC2S --> INS
+    S3D --> MAC
+    RC --> CFG
+    GD --> HUB
+    INS --> HUB
+    MAC --> HUB
+    CFG --> HUB
+    GD --> DET
+    HUB -->|"EventBridge 経由で<br>自動修復・通知"| ACT["SSM Automation / Lambda"]
+```
+
 ## 自動修復パターン(頻出)
 
 ```
@@ -36,6 +66,25 @@ GuardDuty/Config/Security Hub → EventBridge → Lambda / SSM Automation → �
 | 非準拠リソースの一括是正 | Security Hub の**自動化ルール** / カスタムアクション |
 
 - **予防 (SCP / IAM / Block Public Access) > 検出+修復** の順で検討。「そもそも作れなくする」選択肢があれば強い
+
+### シーケンス: 侵害された EC2 の自動隔離
+
+```mermaid
+sequenceDiagram
+    participant GD as GuardDuty
+    participant EB as EventBridge
+    participant L as Lambda(修復)
+    participant EC2 as 対象 EC2
+    participant SNS as SNS
+
+    GD->>EB: finding: CryptoCurrency 通信検知
+    EB->>L: ルール一致で起動
+    L->>EC2: 隔離用 SG に付け替え(通信遮断)
+    L->>EC2: EBS スナップショット取得(証拠保全)
+    L->>EC2: ASG からデタッチ(サービス影響回避)
+    L->>SNS: セキュリティチームへ通知
+    Note over EC2: インスタンスは停止せず保全<br>(フォレンジック調査のため)
+```
 
 ## シークレット・認証情報の改善
 

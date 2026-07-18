@@ -17,6 +17,41 @@
 
 **判断基準**: RTO/RPO が緩い+コスト最優先 → Backup & Restore。「DB だけは常に複製、他は障害時に起動」→ Pilot Light。「縮小構成で常時稼働」→ Warm Standby。「ダウンタイムゼロ」→ Active/Active。
 
+```mermaid
+quadrantChart
+    title DR 戦略のポジショニング(復旧の速さ × コスト)
+    x-axis "RTO/RPO が長い" --> "RTO/RPO がほぼゼロ"
+    y-axis "低コスト" --> "高コスト"
+    "Backup & Restore": [0.15, 0.15]
+    "Pilot Light": [0.4, 0.35]
+    "Warm Standby": [0.65, 0.6]
+    "Multi-Site Active/Active": [0.9, 0.9]
+```
+
+### DR パターン別の構成イメージ(DR リージョンに常時何を置くか)
+
+```mermaid
+flowchart TD
+    subgraph br["Backup & Restore"]
+        B1["バックアップデータのみ<br>(S3 / スナップショット)"]
+    end
+    subgraph pl["Pilot Light"]
+        P1["DB レプリカのみ常時稼働"]
+        P2["App サーバー: 停止<br>(AMI/DRS で待機)"]
+    end
+    subgraph ws["Warm Standby"]
+        W1["DB レプリカ常時稼働"]
+        W2["App サーバー: 縮小版で稼働中<br>(障害時にスケールアップ)"]
+    end
+    subgraph aa["Active/Active"]
+        A1["DB: Global Database /<br>Global Tables"]
+        A2["App: フル構成で<br>本番トラフィック処理中"]
+    end
+    br -->|"RTO 時間〜日"| pl
+    pl -->|"RTO 数十分"| ws
+    ws -->|"RTO 分"| aa
+```
+
 ## サービス別クロスリージョン複製
 
 | サービス | 手段 | RPO 特性 |
@@ -42,6 +77,17 @@
 | Aurora Global Database の managed planned failover | 計画切替(データロスなし)と unplanned failover を使い分け | |
 
 **ひっかけ**: 「クライアントが DNS をキャッシュするため切替が効かない」「固定 IP をファイアウォールに登録済み」→ Route 53 ではなく **Global Accelerator**。
+
+```mermaid
+flowchart TD
+    Q1{"クライアントの DNS キャッシュが<br>問題になる? 固定 IP が必要?"}
+    Q1 -->|はい| GA["Global Accelerator<br>(Anycast IP・即時切替)"]
+    Q1 -->|いいえ| Q2{"切替の確実性・手動制御が<br>極めて重要?(金融系など)"}
+    Q2 -->|はい| ARC["Route 53 ARC<br>(ルーティングコントロール)"]
+    Q2 -->|いいえ| Q3{"DB 層の切替?"}
+    Q3 -->|はい| AUR["Aurora Global Database の<br>managed failover"]
+    Q3 -->|いいえ| R53["Route 53 Failover ルーティング<br>+ ヘルスチェック(標準解)"]
+```
 
 ## バックアップの一元管理
 

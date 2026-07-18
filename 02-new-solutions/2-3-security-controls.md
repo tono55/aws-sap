@@ -22,6 +22,19 @@
 - **KMS キーポリシー**: クロスアカウント利用は「キーポリシーで相手アカウント許可 + 相手側 IAM ポリシー」の両方が必要 — 頻出
 - 転送時暗号化: ACM で TLS 証明書(パブリック証明書は無料・自動更新)。**ACM Private CA** で内部向け証明書。ALB/NLB/CloudFront に関連付け
 
+```mermaid
+flowchart TD
+    Q1{"鍵の管理を誰が行う?"}
+    Q1 -->|"AWS に任せる<br>(運用負荷最小)"| MK["KMS AWS マネージドキー /<br>カスタマーマネージドキー"]
+    Q1 -->|"鍵の生成は自社<br>利用は KMS 経由"| BYOK["KMS キーインポート (BYOK)<br>※自動ローテーション不可"]
+    Q1 -->|"AWS に一切触らせない"| Q2{"どこまで分離する?"}
+    Q2 -->|"専有 HSM が必要<br>(FIPS 140-2 Level 3)"| HSM["CloudHSM<br>(KMS カスタムキーストアも可)"]
+    Q2 -->|"S3 のみ・鍵は毎回持参"| SSEC["SSE-C(顧客提供キー)"]
+    Q2 -->|"AWS に平文を渡さない"| CSE["クライアントサイド暗号化"]
+    MK --> COST{"KMS API コストが問題?"}
+    COST -->|"S3 で大量オブジェクト"| BK["S3 Bucket Key で削減"]
+```
+
 ## 境界防御・ネットワークセキュリティ
 
 | サービス | 防ぐもの | 適用先 |
@@ -34,6 +47,31 @@
 | GWLB (Gateway Load Balancer) | サードパーティ仮想アプライアンスのスケーラブルな挿入(GENEVE) | インライン検査 |
 
 **判断基準**: 「組織内全アカウントの ALB に WAF を強制」→ **Firewall Manager**。「アウトバウンドのドメインフィルタリング」→ **Network Firewall**(または NAT 経由のプロキシ)。「サードパーティ IPS 製品を使う」→ **GWLB**。
+
+### 多層防御の全体像
+
+```mermaid
+flowchart LR
+    NET["インターネット"] --> EDGE
+    subgraph EDGE["エッジ層"]
+        SH["Shield<br>(L3/L4 DDoS)"]
+        CF["CloudFront"]
+        WAF["AWS WAF<br>(L7 フィルタ)"]
+    end
+    EDGE --> VPCL
+    subgraph VPCL["VPC 境界層"]
+        NFW["Network Firewall<br>(IDS/IPS・ドメインフィルタ)"]
+        NACL["NACL(サブネット)"]
+    end
+    VPCL --> RES
+    subgraph RES["リソース層"]
+        SG["Security Group"]
+        APP["ALB → アプリ"]
+    end
+    ORG["Firewall Manager<br>(組織全体にポリシー強制)"] -.-> WAF
+    ORG -.-> NFW
+    ORG -.-> SG
+```
 
 ## アプリケーション層のセキュリティ
 

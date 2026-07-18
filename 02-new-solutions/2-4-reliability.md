@@ -19,6 +19,20 @@
 **判断基準**: 「1つのメッセージを複数の処理系に」→ SNS+SQS ファンアウト。「失敗時のリトライと補償処理を含む複雑なフロー」→ Step Functions。「複数アプリが同じストリームを再読み込み」→ Kinesis。
 
 - **DLQ (Dead Letter Queue)**: SQS/SNS/Lambda/EventBridge で処理失敗メッセージを退避。「失敗メッセージを失わず調査したい」→ DLQ
+
+### 定番構成: SNS→SQS ファンアウト + DLQ
+
+```mermaid
+flowchart LR
+    PROD["注文サービス<br>(プロデューサー)"] --> SNS["SNS トピック"]
+    SNS -->|"フィルターポリシー:<br>type=payment"| Q1["SQS: 決済キュー"]
+    SNS -->|"フィルターポリシー:<br>type=shipping"| Q2["SQS: 出荷キュー"]
+    SNS --> Q3["SQS: 分析キュー(全件)"]
+    Q1 --> W1["決済ワーカー<br>(Lambda / ECS)"]
+    Q2 --> W2["出荷ワーカー"]
+    Q3 --> W3["Firehose → S3"]
+    Q1 -.->|"maxReceiveCount 超過"| DLQ["DLQ<br>(失敗メッセージを調査・redrive)"]
+```
 - SQS の可視性タイムアウト: 処理時間より長く設定。「重複処理が発生」→ 可視性タイムアウト不足 or Standard キューの at-least-once 特性
 
 ## スケーリング設計
@@ -54,3 +68,20 @@
 - Kinesis Data Streams と SQS の使い分け: 「複数コンシューマーが同じデータを読む」「リプレイ」→ Kinesis。「1メッセージ1処理のジョブキュー」→ SQS
 - スパイクで下流の RDS が過負荷 → 間に SQS を挟んで平準化(またはRDS Proxy / Aurora Serverless)
 - EventBridge は **アーカイブとリプレイ**が可能(SNS は不可)— 「イベントを後で再処理」なら EventBridge
+
+### 決定木: メッセージング/イベントサービスの選択
+
+```mermaid
+flowchart TD
+    Q1{"データの性質は?"}
+    Q1 -->|"ジョブ・タスク<br>(1件1処理)"| Q2{"順序保証・重複排除が必要?"}
+    Q2 -->|不要| SQS["SQS Standard"]
+    Q2 -->|必要| FIFO["SQS FIFO"]
+    Q1 -->|"通知・イベント<br>(複数の受信者)"| Q3{"何を基準に振り分ける?"}
+    Q3 -->|"シンプルな同報<br>+属性フィルタ"| SNS["SNS(+SQS ファンアウト)"]
+    Q3 -->|"内容ベースのルール<br>SaaS 連携・リプレイ"| EB["EventBridge"]
+    Q1 -->|"ストリーム<br>(順序・リプレイ・複数読者)"| Q4{"既存 Kafka 資産?"}
+    Q4 -->|なし| KDS["Kinesis Data Streams"]
+    Q4 -->|あり| MSK["Amazon MSK"]
+    Q1 -->|"多段ワークフロー<br>(リトライ・承認・補償)"| SF["Step Functions"]
+```

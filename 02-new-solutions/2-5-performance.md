@@ -19,6 +19,19 @@
 
 **判断基準**: 「DynamoDB の読み取りをマイクロ秒に・コード変更最小」→ DAX。「セッション共有・順位表」→ Redis。「読み取り比率が高い RDS」→ リードレプリカ + キャッシュ。
 
+### 多層キャッシュの全体像(手前で返すほど速く・安い)
+
+```mermaid
+flowchart LR
+    U["ユーザー"] --> CF["CloudFront<br>(エッジキャッシュ)"]
+    CF -->|キャッシュミス| APIGW["API Gateway<br>(ステージキャッシュ)"]
+    APIGW -->|キャッシュミス| APP["アプリ層<br>(ALB → ECS/Lambda)"]
+    APP --> REDIS["ElastiCache Redis<br>(クエリ結果・セッション)"]
+    APP --> DAX["DAX<br>(DynamoDB 専用)"]
+    REDIS -->|キャッシュミス| RDS["RDS / Aurora<br>(+リードレプリカ)"]
+    DAX -->|キャッシュミス| DDB["DynamoDB"]
+```
+
 ## グローバル配信・エッジ
 
 - **CloudFront**: OAC で S3 を非公開のまま配信。オリジンフェイルオーバー(プライマリ/セカンダリ)。**Lambda@Edge**(Node/Python、リージョナルエッジ)と **CloudFront Functions**(軽量 JS、閲覧者エッジ、超低レイテンシー)の使い分け — ヘッダー操作・リダイレクト程度なら CloudFront Functions
@@ -27,6 +40,16 @@
 - **S3 Multi-Region Access Points**: 複数リージョンのバケットを単一エンドポイントで最寄りアクセス
 
 **CloudFront vs Global Accelerator**(頻出): HTTP コンテンツのキャッシュ → CloudFront。非 HTTP(TCP/UDP)・静的 IP・高速フェイルオーバー → Global Accelerator。
+
+```mermaid
+flowchart TD
+    Q1{"プロトコルは?"}
+    Q1 -->|"HTTP/HTTPS で<br>コンテンツをキャッシュしたい"| CF["CloudFront"]
+    Q1 -->|"TCP/UDP(ゲーム・VoIP・MQTT)<br>またはキャッシュ不要の API"| Q2{"静的 IP・即時リージョン<br>フェイルオーバーが必要?"}
+    Q2 -->|はい| GA["Global Accelerator"]
+    Q2 -->|"いいえ・単一リージョン"| DIRECT["ELB へ直接<br>(+Route 53)"]
+    CF -->|"さらに静的 IP も必要なら"| BOTH["CloudFront + GA の併用は不可。<br>要件の優先度で選ぶ"]
+```
 
 ## コンピューティング選択
 

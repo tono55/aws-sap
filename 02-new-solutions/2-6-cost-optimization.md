@@ -23,6 +23,19 @@
 - RI/Savings Plans は **Organizations の一括請求で共有される**(共有を無効化も可能)— 1-5 参照
 - **キャパシティ確保**が目的なら On-Demand Capacity Reservation(割引なし。RI と併用で割引+確保)
 
+```mermaid
+flowchart TD
+    Q1{"負荷は定常的?"}
+    Q1 -->|"定常(常時稼働)"| Q2{"Fargate / Lambda too?<br>構成変更の可能性は?"}
+    Q2 -->|"柔軟性がほしい<br>(既定解)"| CSP["Compute Savings Plans"]
+    Q2 -->|"EC2 構成が完全に固定<br>最大割引を狙う"| RI["EC2 Instance SP /<br>Standard RI (〜72%)"]
+    Q1 -->|"変動・断続的"| Q3{"中断を許容できる?<br>(リトライ可能なバッチ等)"}
+    Q3 -->|はい| SPOT["Spot (〜90% 引)<br>複数タイプ×AZ に分散"]
+    Q3 -->|いいえ| Q4{"稼働時間が予測可能?"}
+    Q4 -->|"はい(夜間停止など)"| SCHED["On-Demand +<br>Instance Scheduler"]
+    Q4 -->|いいえ| OD["On-Demand<br>(またはサーバーレス化)"]
+```
+
 ## ストレージのコスト設計
 
 | 階層 | 用途 | 注意 |
@@ -35,6 +48,15 @@
 | **Glacier Deep Archive** | 年1回・12時間取得可 | **最安**。最低180日 |
 
 - **ライフサイクルポリシー**で自動階層移動 + 期限切れ削除。**S3 Storage Class Analysis / Storage Lens** で分析
+
+```mermaid
+flowchart LR
+    STD["S3 Standard<br>(作成直後)"] -->|"30日後"| IA["Standard-IA<br>(月1回程度のアクセス)"]
+    IA -->|"90日後"| GIR["Glacier Instant<br>(即時取得は維持)"]
+    GIR -->|"180日後"| DA["Glacier Deep Archive<br>(年1回・12h 取得・最安)"]
+    DA -->|"7年後(規制期間終了)"| EXP["期限切れ削除"]
+    STD -.->|"アクセスパターン不明なら"| IT["Intelligent-Tiering<br>(自動階層・取り出し料なし)"]
+```
 - EBS: gp2 → **gp3**(〜20% 減)。未使用ボリューム・古いスナップショットの削除(DLM で自動化)
 - EFS: **EFS IA / Archive + ライフサイクル管理**。「ほとんど読まれない共有ファイル」→ EFS-IA
 

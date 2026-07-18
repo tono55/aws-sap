@@ -19,6 +19,32 @@
 
 **判断基準**: 「ロールバックを最速に」「ダウンタイムゼロ」→ Blue/Green。「リスクを最小化しながら段階的に」→ Canary。「コスト最小」→ Rolling。
 
+```mermaid
+flowchart TD
+    Q1{"ダウンタイムは<br>許容できる?"}
+    Q1 -->|はい| AIO["All at once / In-place<br>(最速・最安)"]
+    Q1 -->|いいえ| Q2{"最優先の要件は?"}
+    Q2 -->|"追加コスト最小"| ROLL["Rolling<br>(新旧混在を許容)"]
+    Q2 -->|"即時ロールバック"| BG["Blue/Green<br>(環境2面・切り戻すだけ)"]
+    Q2 -->|"リスクを段階的に検証"| CAN["Canary / Linear<br>(一部トラフィックで検証)"]
+```
+
+### Blue/Green と Canary のトラフィック切替
+
+```mermaid
+flowchart LR
+    subgraph bg["Blue/Green(一括切替)"]
+        U1["ユーザー"] --> LB1["ALB リスナー"]
+        LB1 ==>|"100% → 0%"| BLUE["Blue 環境(現行)"]
+        LB1 -.->|"0% → 100%"| GREEN["Green 環境(新)"]
+    end
+    subgraph canary["Canary(段階切替)"]
+        U2["ユーザー"] --> LB2["ALB / Lambda エイリアス"]
+        LB2 ==>|"90%"| V1["現行バージョン"]
+        LB2 -->|"10%(検証後に段階増加)"| V2["新バージョン"]
+    end
+```
+
 ## サービス別の Blue/Green・Canary 実現方法
 
 | 対象 | 方法 | ポイント |

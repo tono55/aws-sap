@@ -2,6 +2,8 @@
 
 公式試験ガイド(SAP-C02)に基づく試験範囲の整理。
 
+> **最初に読む**: SAP-C02 は「Well-Architected Framework に基づく設計最適化」を問う試験です。全ドメインノートの判断軸となる [Well-Architected Framework 解説](./well-architected.md) を先に読んでください。
+
 ## 試験形式
 
 - **問題数**: 75問(採点対象65問 + 採点対象外10問。どれが採点対象外かは受験者にはわからない)

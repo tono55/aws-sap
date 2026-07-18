@@ -59,6 +59,27 @@
 | OpenSearch | 全文検索・ログ分析(+ UltraWarm 階層) |
 | Athena | S3 への SQL(サーバーレス・スキャン課金) |
 
+## 決定木: DB 選択(ワークロード特性)
+
+```mermaid
+flowchart TD
+    Q1{"データモデルは?"}
+    Q1 -->|"リレーショナル<br>(JOIN・トランザクション)"| Q2{"規模・要件は?"}
+    Q2 -->|"標準的 / 商用 DB 互換"| RDS["RDS"]
+    Q2 -->|"高性能・グローバル・<br>変動負荷"| AUR["Aurora<br>(Global / Serverless v2)"]
+    Q2 -->|"分析 (OLAP)"| RS["Redshift"]
+    Q1 -->|"キーバリュー<br>(ミリ秒・無限スケール)"| DDB["DynamoDB(+DAX)"]
+    Q1 -->|"インメモリ<br>(キャッシュ・セッション)"| Q3{"永続化が必須?"}
+    Q3 -->|いいえ| EC["ElastiCache"]
+    Q3 -->|はい| MDB["MemoryDB"]
+    Q1 -->|"ドキュメント (MongoDB)"| DOC["DocumentDB"]
+    Q1 -->|"グラフ(関係性探索)"| NEP["Neptune"]
+    Q1 -->|時系列| TS["Timestream"]
+    Q1 -->|"台帳(改ざん検証)"| QLDB["QLDB"]
+    Q1 -->|"全文検索・ログ"| OS["OpenSearch"]
+    Q1 -->|"S3 上のデータに SQL"| ATH["Athena"]
+```
+
 ## 定番シナリオ即答
 
 - 「RDBMS のクロスリージョン DR、RPO 秒・RTO 分」→ **Aurora Global Database**

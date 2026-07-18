@@ -46,6 +46,21 @@
 | **FSx for NetApp ONTAP** | **NFS+SMB 両対応・SnapMirror でオンプレ NetApp から移行**・重複排除・iSCSI |
 | FSx for OpenZFS | NFS・ZFS スナップショット・低レイテンシー |
 
+## 決定木: 共有ファイルストレージの選択
+
+```mermaid
+flowchart TD
+    Q1{"プロトコル・用途は?"}
+    Q1 -->|"NFS・Linux・汎用"| Q2{"超高速並列 I/O?<br>(HPC / ML)"}
+    Q2 -->|いいえ| EFS["EFS"]
+    Q2 -->|"はい + S3 連携"| LUSTRE["FSx for Lustre"]
+    Q1 -->|"SMB・Windows・AD 権限"| WIN["FSx for Windows"]
+    Q1 -->|"NFS + SMB 両方<br>or オンプレ NetApp から移行"| ONTAP["FSx for NetApp ONTAP"]
+    Q1 -->|"オンプレから S3 を<br>ファイルとして使いたい"| FGW["S3 File Gateway"]
+    Q1 -->|"iSCSI ブロック"| VGW["Volume Gateway"]
+    Q1 -->|"テープの置き換え"| TGW2["Tape Gateway"]
+```
+
 ## Storage Gateway(ハイブリッド)
 
 - **File Gateway**: NFS/SMB → S3(ローカルキャッシュ)。移行後のオンプレ継続アクセスに

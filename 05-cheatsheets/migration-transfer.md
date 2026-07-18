@@ -48,6 +48,18 @@
 
 **転送日数概算**: 1 Gbps ≈ 10 TB/日(理論値の約8割で見積る)。期限に間に合わなければ Snow Family。
 
+```mermaid
+flowchart TD
+    Q1{"何を移す?"}
+    Q1 -->|"サーバー (OS ごと)"| MGN["MGN"]
+    Q1 -->|"データベース"| DMS["DMS(異種は +SCT)"]
+    Q1 -->|"ファイル/オブジェクト"| Q2{"帯域で期限に間に合う?"}
+    Q2 -->|はい| DS["DataSync"]
+    Q2 -->|いいえ| SNOW["Snowball Edge"]
+    Q1 -->|"SFTP 連携の維持"| TF["Transfer Family"]
+    Q1 -->|"移行せず共存"| SGW["Storage Gateway"]
+```
+
 ## Snow Family
 
 - **Snowcone**: 8TB・小型(エッジ・宅配返送)

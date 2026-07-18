@@ -18,6 +18,16 @@
 | サブネット自体を他アカウントと共用 | RAM の VPC 共有 |
 | マルチリージョン・グローバル統合管理 | Cloud WAN / TGW ピアリング |
 
+```mermaid
+flowchart TD
+    Q1{"何をつなぐ?"}
+    Q1 -->|"特定サービスだけ<br>or CIDR 重複"| PL["PrivateLink"]
+    Q1 -->|"2〜3 VPC・増えない"| PEER["VPC Peering"]
+    Q1 -->|"多数 VPC + オンプレ"| TGW["Transit Gateway"]
+    Q1 -->|"サブネットを共用"| RAM["RAM VPC 共有"]
+    Q1 -->|"グローバル統合"| CWAN["Cloud WAN"]
+```
+
 ## Transit Gateway
 
 - リージョナル。リージョン間は **TGW ピアリング(静的ルートのみ)**

@@ -63,6 +63,21 @@
 | SaaS/AWS イベントのルーティング・リプレイ | EventBridge |
 | 既存 Kafka | MSK |
 
+```mermaid
+flowchart TD
+    Q1{"パターンは?"}
+    Q1 -->|"1件1処理のキュー"| Q2{"順序・重複排除?"}
+    Q2 -->|不要| SQS["SQS Standard"]
+    Q2 -->|必要| FIFO["SQS FIFO"]
+    Q1 -->|"複数受信者へ同報"| SNS["SNS ファンアウト"]
+    Q1 -->|"内容ベースルーティング<br>SaaS 連携・リプレイ"| EB["EventBridge"]
+    Q1 -->|"順序付きストリーム<br>複数読者・リプレイ"| Q3{"Kafka 資産?"}
+    Q3 -->|なし| KDS["Kinesis Data Streams"]
+    Q3 -->|あり| MSK["MSK"]
+    Q1 -->|"S3/Redshift へ流すだけ"| KDF["Firehose"]
+    Q1 -->|"多段ワークフロー"| SF["Step Functions"]
+```
+
 ## 分析系ひとこと
 
 - **Athena**: S3 に SQL。**Parquet+パーティションでコスト減**。Federated Query

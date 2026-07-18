@@ -23,6 +23,37 @@
 - 「移行の費用対効果を経営層に示す」→ **Migration Evaluator**
 - 「複数ツールにまたがる移行進捗の一元管理」→ **Migration Hub**
 
+```mermaid
+flowchart LR
+    subgraph onprem["オンプレミス"]
+        VM["VMware 環境"]
+        PHY["物理サーバー"]
+    end
+    subgraph collect["① 情報収集"]
+        AGL["ADS Agentless Collector<br>(vCenter 経由・VMware のみ)"]
+        AGT["ADS Discovery Agent<br>(依存関係・通信まで取得)"]
+    end
+    subgraph analyze["② 分析・計画"]
+        ME["Migration Evaluator<br>(TCO・ビジネスケース)"]
+        SR["Strategy Recommendations<br>(7R の推奨)"]
+    end
+    HUB["③ Migration Hub<br>(グルーピング・ウェーブ管理・進捗)"]
+    subgraph exec["④ 実行ツール"]
+        MGN["MGN(サーバー)"]
+        DMS["DMS(DB)"]
+    end
+    VM --> AGL
+    PHY --> AGT
+    AGL --> HUB
+    AGT --> HUB
+    HUB --> ME
+    HUB --> SR
+    HUB --> MGN
+    HUB --> DMS
+    MGN -->|進捗を報告| HUB
+    DMS -->|進捗を報告| HUB
+```
+
 ## 移行対象の優先順位付け
 
 - 依存関係の少ない・リスクの低いワークロードから着手(quick win で組織の学習を進める)

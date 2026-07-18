@@ -34,6 +34,25 @@
 - **Strangler Fig パターン**: モノリスの機能を少しずつ API Gateway/ALB の背後で新実装に差し替える(一括書き換えより低リスク)— 頻出キーワード
 - ALB の**パスベースルーティング**や API Gateway で新旧を共存させる
 
+```mermaid
+flowchart TB
+    subgraph phase1["フェーズ 1: ファサード設置"]
+        U1["ユーザー"] --> R1["ALB / API Gateway"]
+        R1 -->|"全パス"| M1["モノリス"]
+    end
+    subgraph phase2["フェーズ 2: 機能を段階的に切り出し"]
+        U2["ユーザー"] --> R2["ALB / API Gateway"]
+        R2 -->|"/orders"| MS1["注文サービス<br>(Lambda / Fargate)"]
+        R2 -->|"/users"| MS2["ユーザーサービス"]
+        R2 -->|"その他のパス"| M2["モノリス(縮小中)"]
+    end
+    subgraph phase3["フェーズ 3: モノリス廃止"]
+        U3["ユーザー"] --> R3["ALB / API Gateway"]
+        R3 --> MS3["マイクロサービス群のみ"]
+    end
+    phase1 ==> phase2 ==> phase3
+```
+
 ## データベースのモダナイゼーション(パーパスビルト)
 
 - 商用 DB (Oracle/SQL Server) → **Aurora**(ライセンス脱却)。SCT + DMS([4-2](./4-2-migration-strategy.md))
@@ -54,6 +73,15 @@
 
 - モダナイズの目的キーワード: 「運用負荷削減」→ サーバーレス/マネージド化、「デプロイ頻度向上」→ コンテナ+CI/CD、「ライセンス費削減」→ OSS エンジン/Aurora、「スケーラビリティ」→ 疎結合+オートスケール
 - 期限が厳しい場合: まず Rehost で移行し、**後からモダナイズ**(二段階)が現実解として正解になることも
+
+```mermaid
+flowchart LR
+    OP["オンプレミス<br>モノリス + 商用 DB"]
+    OP -->|"① Rehost (MGN)<br>期限厳守・変更なし"| EC2["EC2 + セルフ管理 DB<br>(まず AWS に載せる)"]
+    EC2 -->|"② Replatform<br>運用負荷削減"| MID["EC2/コンテナ + RDS/Aurora<br>(マネージド DB 化)"]
+    MID -->|"③ Refactor<br>効果最大化"| NATIVE["サーバーレス / コンテナ +<br>パーパスビルト DB + イベント駆動"]
+    OP -.->|"体力があれば直接 ②③ へ"| MID
+```
 
 ## 頻出のひっかけポイント
 

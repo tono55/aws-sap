@@ -32,6 +32,7 @@ Associate レベルの基礎知識は既知として、Professional 特有の内
 | パート | 内容 |
 |---|---|
 | [00-exam-guide](./00-exam-guide/README.md) | 試験範囲の詳細(タスクステートメント・対象サービス一覧) |
+| [学習リソース集](./00-exam-guide/resources.md) | 公式教材・日本語リソース・模試・ハンズオンのリンク集(用途の解説付き) |
 | [01-organizational-complexity](./01-organizational-complexity/README.md) | Domain 1: ネットワーク接続・セキュリティ統制・信頼性・マルチアカウント・コスト |
 | [02-new-solutions](./02-new-solutions/README.md) | Domain 2: デプロイ戦略・事業継続性・セキュリティ・信頼性・性能・コスト |
 | [03-continuous-improvement](./03-continuous-improvement/README.md) | Domain 3: 運用・セキュリティ・性能・信頼性・コストの改善 |
@@ -43,7 +44,7 @@ Associate レベルの基礎知識は既知として、Professional 特有の内
 1. **判断軸の習得** — [Well-Architected Framework 解説](./00-exam-guide/well-architected.md) を最初に読む。SAP の全問題の評価基準となる6本の柱とトレードオフの読み方を押さえる
 2. **試験範囲の把握** — [00-exam-guide](./00-exam-guide/README.md) で全体像とタスクステートメントを確認
 3. **ドメイン別学習** — 配点の大きい順(02 → 01 → 03 → 04)にノートを読み込む。各ノートは「テーマの背景 → Well-Architected との対応 → 仕組みと選定理由の解説 → ケーススタディ → 試験直前の要点」の構成
-4. **模擬試験・問題演習** — AWS Skill Builder の公式練習問題や市販の模試で弱点を特定し、該当ノートに戻る
+4. **模擬試験・問題演習** — AWS Skill Builder の公式練習問題や市販の模試で弱点を特定し、該当ノートに戻る(教材の選び方は[学習リソース集](./00-exam-guide/resources.md)を参照)
 5. **直前対策** — [05-cheatsheets](./05-cheatsheets/README.md) で要点と使い分けを総復習
 
 ## SAP 試験の特徴(SAA との違い)

@@ -109,11 +109,8 @@ Amazon SageMaker, Amazon Rekognition, Amazon Comprehend, Amazon Transcribe, Amaz
 - ネットワークプロトコルのビットレベルの詳細
 - コンシューマー向けサービス(Amazon Chime, WorkMail 等)や、ゲーム(GameLift)・IoT・ロボティクス等の深い専門領域(名前と用途レベルは知っておくと安心)
 
-## 学習リソース(公式)
+## 学習リソース
 
-- AWS Skill Builder: Exam Prep Official Practice Question Set (SAP-C02)(無料の公式練習問題)
-- AWS Well-Architected Framework ホワイトペーパー(6本の柱)
-- AWS アーキテクチャセンター / This is My Architecture
-- 各サービスの FAQ(特に VPC / DX / S3 / RDS / DynamoDB / Organizations)
+公式教材・日本語リソース・模試・ハンズオンなどの外部リソースは、用途と使いどころの解説付きで **[学習リソース集 (resources.md)](./resources.md)** にまとめている。
 
 > **注**: 対象サービスリストは公式試験ガイドで随時更新されます。受験申込前に必ず最新の公式試験ガイド(AWS 認定ページからダウンロード可能)を確認してください。

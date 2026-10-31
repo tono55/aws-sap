@@ -38,7 +38,8 @@
 ## EKS
 
 - マネージド K8s。ノード: マネージドノードグループ / **Fargate**(Pod 単位)/ セルフマネージド
-- **IRSA (IAM Roles for Service Accounts)**: Pod 単位の IAM 権限
+- **EKS Pod Identity**(現在の推奨)/ IRSA (IAM Roles for Service Accounts): Pod 単位の IAM 権限。Pod Identity はクラスターごとの OIDC プロバイダー設定が不要で、ロールの信頼ポリシーをクラスター間で使い回せる
+- **EKS Auto Mode**: ノードのプロビジョニング・スケーリング・パッチまで AWS が管理(Karpenter ベース)
 - EKS Anywhere / EKS Distro(オンプレ一貫性)
 - 既存 K8s 資産・エコシステム(Helm 等)要件なら EKS、それ以外は ECS
 

@@ -17,6 +17,8 @@
 | 特定サービスだけ公開 / CIDR 重複 | **PrivateLink** |
 | サブネット自体を他アカウントと共用 | RAM の VPC 共有 |
 | マルチリージョン・グローバル統合管理 | Cloud WAN / TGW ピアリング |
+| 多数アカウントのサービス間通信を IAM で認可 | **VPC Lattice**(CIDR 重複可・ルーティング不要) |
+| VPN なしで社内アプリへゼロトラスト | **Verified Access** |
 
 ```mermaid
 flowchart TD
@@ -66,6 +68,7 @@ flowchart TD
 - **CloudFront Functions**(閲覧者エッジ・軽量 JS・ヘッダー/リダイレクト)vs **Lambda@Edge**(リージョナルエッジ・Node/Python・オリジンリクエスト改変や認可)
 - 署名付き URL/Cookie(有料コンテンツ)、フィールドレベル暗号化
 - WAF/Shield Advanced をアタッチ可。地域制限(Geo restriction)
+- **VPC オリジン**: プライベートサブネットの ALB/NLB/EC2 を直接オリジンに(オリジンを公開しない)
 
 ## Global Accelerator
 

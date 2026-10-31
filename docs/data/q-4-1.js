@@ -170,7 +170,7 @@ SAP.add("4.1", [
   c: [
     "メインフレームのアプリは AWS に移行できないため、永続的に保持する",
     "COBOL のコードをそのまま Lambda で動かす",
-    "AWS Transform for mainframe(旧 AWS Mainframe Modernization)を使い、コードの分析・ドキュメント化と、自動リファクタリング(Java 化)またはリプラットフォームを評価する",
+    "AWS Mainframe Modernization や AWS Transform for mainframe を使い、コードの分析・ドキュメント化と、自動リファクタリング(Java 化)またはリプラットフォームを評価する",
     "すべてを手作業でゼロから書き直すことだけを検討する"
   ],
   a: [2],

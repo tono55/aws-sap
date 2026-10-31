@@ -38,13 +38,14 @@ Associate レベルの基礎知識は既知として、Professional 特有の内
 | [03-continuous-improvement](./03-continuous-improvement/README.md) | Domain 3: 運用・セキュリティ・性能・信頼性・コストの改善 |
 | [04-migration-modernization](./04-migration-modernization/README.md) | Domain 4: 移行評価・7R 戦略・モダナイゼーション |
 | [05-cheatsheets](./05-cheatsheets/README.md) | サービス別チートシート(試験直前の暗記用) |
+| [練習問題集(GitHub Pages)](https://tono55.github.io/aws-sap/) | 19 タスクステートメントから均等に作成したオリジナル問題。練習モード/模試モード、解答履歴・要復習の管理つき(ソース: [docs/](./docs/)) |
 
 ## 使い方(推奨学習フロー)
 
 1. **判断軸の習得** — [Well-Architected Framework 解説](./00-exam-guide/well-architected.md) を最初に読む。SAP の全問題の評価基準となる6本の柱とトレードオフの読み方を押さえる
 2. **試験範囲の把握** — [00-exam-guide](./00-exam-guide/README.md) で全体像とタスクステートメントを確認
 3. **ドメイン別学習** — 配点の大きい順(02 → 01 → 03 → 04)にノートを読み込む。各ノートは「テーマの背景 → Well-Architected との対応 → 仕組みと選定理由の解説 → ケーススタディ → 試験直前の要点」の構成
-4. **模擬試験・問題演習** — AWS Skill Builder の公式練習問題や市販の模試で弱点を特定し、該当ノートに戻る(教材の選び方は[学習リソース集](./00-exam-guide/resources.md)を参照)
+4. **模擬試験・問題演習** — [練習問題集](https://tono55.github.io/aws-sap/) でタスク単位の弱点を洗い出し、AWS Skill Builder の公式練習問題や市販の模試で弱点を特定し、該当ノートに戻る(教材の選び方は[学習リソース集](./00-exam-guide/resources.md)を参照)
 5. **直前対策** — [05-cheatsheets](./05-cheatsheets/README.md) で要点と使い分けを総復習
 
 ## SAP 試験の特徴(SAA との違い)

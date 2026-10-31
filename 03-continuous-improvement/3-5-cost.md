@@ -17,11 +17,12 @@
 | ツール | 得意分野 | 特徴 |
 |---|---|---|
 | **Trusted Advisor** | **アイドル・低使用率のチェック**(低使用 EC2、アイドル RDS、未関連付け EIP、低使用 EBS) | ルールベース。フルチェックは Business/Enterprise サポート契約が必要 |
-| **Compute Optimizer** | **ライトサイジング推奨**(EC2 / ASG / EBS / Lambda / ECS on Fargate) | **ML ベース**で「このインスタンスは m5.xlarge → m6g.large が最適」まで提案(Graviton 移行含む) |
+| **Compute Optimizer** | **ライトサイジング推奨**(EC2 / ASG / EBS / Lambda / ECS on Fargate / RDS・Aurora / 商用ライセンス)+ **アイドルリソース検出** | **ML ベース**で「このインスタンスは m5.xlarge → m6g.large が最適」まで提案(Graviton 移行含む) |
 | **Cost Explorer** | 使用傾向・予測、**RI/SP の推奨・使用率・カバレッジ** | 集計 GUI(1-5 参照) |
 | **CUR + Athena** | リソース単位の深掘り | 「どのリソースがいくら」の最終手段 |
 | **S3 Storage Lens** | 組織全体の S3 使用状況 | **未完了マルチパートアップロード・旧バージョンの堆積**を可視化 |
 | Cost Anomaly Detection | 想定外の急増 | ML で「いつもと違う」を検知(1-5 参照) |
+| **Cost Optimization Hub** | 削減提案の集約 | Compute Optimizer・RI/SP 推奨・アイドル削除などを**組織横断で1画面に集約**し、見込み削減額で優先順位付け。「多数アカウントの削減機会を一元的に把握したい」の答え |
 
 「ML ベースのサイジング推奨」とあれば Compute Optimizer、「サポートプランに含まれるチェック」とあれば Trusted Advisor、という語彙の対応も出題されます。
 

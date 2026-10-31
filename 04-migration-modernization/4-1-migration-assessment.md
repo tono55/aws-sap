@@ -22,6 +22,9 @@
 | **Migration Hub** | 移行全体の**一元管理**: ADS データの表示、アプリのグルーピング、各移行ツール (MGN/DMS) の進捗集約 |
 | Migration Hub Strategy Recommendations | サーバー・アプリを分析し **7R 戦略を推奨** |
 | **MRA** | CAF に基づく**組織の移行準備度**評価(技術以外を含む) |
+| (新)**AWS Transform** | 生成 AI エージェントによる移行・モダナイズ支援(VMware 移行の計画とネットワーク変換、.NET / メインフレーム / VMware ワークロードの変換)。2025年 GA |
+
+> **サービス提供状況の変化(2025年)**: **Migration Hub**(Strategy Recommendations を含む)と **Application Discovery Service** は 2025年11月7日に新規顧客の受付を終了し、機能は AWS Transform に集約されています(既存利用者は継続利用可)。ただし試験問題は「ADS → Migration Hub → Evaluator」という従来の役割分担で作られており、現行の SAP-C02 対策としてはこの整理で解くのが安全です。
 
 ```mermaid
 flowchart LR

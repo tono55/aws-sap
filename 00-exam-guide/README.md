@@ -64,7 +64,7 @@
 頻出度の高いものを太字で示す。詳細は [05-cheatsheets](../05-cheatsheets/README.md) を参照。
 
 ### ネットワークとコンテンツ配信
-**Amazon VPC**, **AWS Transit Gateway**, **AWS Direct Connect**, **AWS Site-to-Site VPN**, AWS Client VPN, **AWS PrivateLink**, **Amazon Route 53**, **Amazon CloudFront**, **AWS Global Accelerator**, Elastic Load Balancing (ALB/NLB/GWLB), AWS Cloud WAN, Amazon API Gateway, AWS App Mesh, AWS Cloud Map
+**Amazon VPC**, **AWS Transit Gateway**, **AWS Direct Connect**, **AWS Site-to-Site VPN**, AWS Client VPN, **AWS PrivateLink**, **Amazon Route 53**, **Amazon CloudFront**, **AWS Global Accelerator**, Elastic Load Balancing (ALB/NLB/GWLB), AWS Cloud WAN, Amazon API Gateway, AWS App Mesh ※, AWS Cloud Map, Amazon VPC Lattice
 
 ### セキュリティ・アイデンティティ・コンプライアンス
 **AWS IAM**, **AWS IAM Identity Center**, **AWS Organizations (SCP)**, **AWS Control Tower**, **AWS KMS**, AWS CloudHSM, **AWS WAF**, AWS Shield, **Amazon GuardDuty**, **AWS Security Hub**, Amazon Inspector, Amazon Macie, Amazon Detective, **AWS Secrets Manager**, AWS Certificate Manager (ACM), AWS Firewall Manager, AWS Network Firewall, AWS Directory Service, Amazon Cognito, AWS Resource Access Manager (RAM), AWS Audit Manager, AWS Artifact
@@ -79,7 +79,7 @@
 **Amazon S3**, S3 Glacier, **Amazon EBS**, **Amazon EFS**, **Amazon FSx** (Windows / Lustre / NetApp ONTAP / OpenZFS), **AWS Storage Gateway**, **AWS Backup**, AWS Elastic Disaster Recovery (DRS)
 
 ### データベース
-**Amazon RDS**, **Amazon Aurora (Global Database / Serverless)**, **Amazon DynamoDB (Global Tables / DAX)**, **Amazon ElastiCache** (Redis / Memcached), **Amazon Redshift**, Amazon Neptune, Amazon DocumentDB, Amazon Keyspaces, Amazon Timestream, Amazon QLDB, Amazon MemoryDB
+**Amazon RDS**, **Amazon Aurora (Global Database / Serverless)**, **Amazon DynamoDB (Global Tables / DAX)**, **Amazon ElastiCache** (Redis / Memcached), **Amazon Redshift**, Amazon Neptune, Amazon DocumentDB, Amazon Keyspaces, Amazon Timestream, Amazon QLDB ※, Amazon MemoryDB
 
 ### アプリケーション統合
 **Amazon SQS**, **Amazon SNS**, **Amazon EventBridge**, **AWS Step Functions**, Amazon MQ, Amazon AppFlow, AWS AppSync, Amazon SES
@@ -91,7 +91,7 @@
 **AWS Application Migration Service (MGN)**, **AWS Database Migration Service (DMS)**, **AWS DataSync**, **AWS Snow Family**, **AWS Transfer Family**, **AWS Migration Hub**, **AWS Application Discovery Service**, AWS Schema Conversion Tool (SCT), AWS Mainframe Modernization
 
 ### マネジメント・ガバナンス
-**Amazon CloudWatch**, **AWS CloudTrail**, **AWS Config**, **AWS Systems Manager**, **AWS CloudFormation**, AWS Service Catalog, **AWS Trusted Advisor**, AWS Compute Optimizer, AWS License Manager, AWS Health Dashboard, AWS Well-Architected Tool, AWS Proton, AWS Resilience Hub, AWS Fault Injection Service
+**Amazon CloudWatch**, **AWS CloudTrail**, **AWS Config**, **AWS Systems Manager**, **AWS CloudFormation**, AWS Service Catalog, **AWS Trusted Advisor**, AWS Compute Optimizer, AWS License Manager, AWS Health Dashboard, AWS Well-Architected Tool, AWS Proton ※, AWS Resilience Hub, AWS Fault Injection Service
 
 ### コスト管理
 **AWS Cost Explorer**, **AWS Cost and Usage Report (CUR)**, **AWS Budgets**, Savings Plans, AWS Cost Anomaly Detection, AWS Billing Conductor
@@ -101,6 +101,31 @@ AWS CodePipeline, AWS CodeBuild, AWS CodeDeploy, AWS CDK, AWS X-Ray, AWS Amplify
 
 ### 機械学習(浅い出題)
 Amazon SageMaker, Amazon Rekognition, Amazon Comprehend, Amazon Transcribe, Amazon Translate, Amazon Polly, Amazon Textract, Amazon Kendra, Amazon Fraud Detector, Amazon Personalize
+
+## サービス提供状況の変化(2024〜2026年)— 古い教材とのズレに注意
+
+SAP-C02 は 2022年11月開始の試験で、問題プールには当時の前提で作られた問題も残っています。一方で AWS はこの間にいくつかのサービスを終了・新規受付停止しています。**試験では「問題文の前提どおりに」解くのが原則**ですが、新規設計の知識として、また問題集の古い記述を見抜くために、以下を押さえておきます(上の一覧で ※ を付けたもの等)。
+
+| サービス | 状況 | 代替・補足 |
+|---|---|---|
+| Amazon QLDB | 2025年7月31日 サポート終了 | Aurora PostgreSQL(監査ログ設計)など |
+| AWS App Mesh | 2026年9月30日 サポート終了 | ECS Service Connect / VPC Lattice |
+| AWS Proton | 2026年10月7日 サポート終了 | Service Catalog / CloudFormation / CDK |
+| AWS Migration Hub / Application Discovery Service | 2025年11月7日 新規受付終了 | AWS Transform |
+| AWS Mainframe Modernization(マネージド) | 2025年11月7日 新規受付終了 | AWS Transform for mainframe / セルフマネージド版 |
+| App2Container ほか .NET 移行ツール | 2025年11月7日 新規受付終了 | AWS Transform for .NET |
+| AWS Snowball Edge | 2025年11月7日 新規受付終了(Snowcone・Snowmobile は既に終了) | DataSync / AWS Data Transfer Terminal |
+| Systems Manager Incident Manager / Change Manager | 2025年11月7日 新規受付終了 | OpsCenter など |
+| Amazon S3 Object Lambda | 2025年11月7日 新規受付終了 | CloudFront + Lambda など |
+| Amazon Glacier(独立サービスのボールト) | 2025年12月15日 新規受付終了 | S3 Glacier ストレージクラス(影響なし) |
+| Amazon Timestream for LiveAnalytics | 2025年6月 新規受付終了 | Timestream for InfluxDB |
+| Amazon Fraud Detector | 2025年11月7日 新規受付終了 | SageMaker 等 |
+
+**名称変更**も問題文の表記揺れの原因になります: Kinesis Data Firehose → **Amazon Data Firehose**、Fault Injection Simulator → **Fault Injection Service**、AWS Chatbot → **Amazon Q Developer in chat applications**、ElastiCache for Redis → **ElastiCache (Valkey / Redis OSS)**、Aurora Global Database の managed planned failover → **switchover**。
+
+**主な機能追加**(各ノートに反映済み): RCP・宣言型ポリシー・ルートアクセス管理(1-2, 1-4)、DynamoDB Global Tables の強い整合性 MRSC(2-2)、SQS メッセージ 1 MiB(2-4)、VPN 5 Gbps トンネル(1-1)、ECS ネイティブ Blue/Green(2-1)、Database Savings Plans(2-6)、Route 53 Profiles・ARC zonal shift / Region switch(1-1, 1-3)。
+
+> 出典: [AWS サービスの提供状況に関する最新情報(2025年10月)](https://aws.amazon.com/jp/about-aws/whats-new/2025/10/aws-service-availability/) ほか各サービスのドキュメント。状況は変わるため、受験前に公式情報を確認してください。
 
 ## 試験範囲外(出題されない)
 

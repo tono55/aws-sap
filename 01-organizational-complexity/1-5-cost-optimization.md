@@ -23,12 +23,13 @@
 | ツール | 粒度・目的 |
 |---|---|
 | **Cost Explorer** | GUI でのインタラクティブ分析・傾向把握・予測。**RI/SP の購入推奨**もここ。ただし粒度は集計値 |
-| **CUR (Cost and Usage Report)** | **最詳細の明細**(リソース ID 単位・時間単位)。S3 に吐き出す生データで、分析は自分で行う |
+| **CUR (Cost and Usage Report)** | **最詳細の明細**(リソース ID 単位・時間単位)。S3 に吐き出す生データで、分析は自分で行う。現在は **Data Exports の CUR 2.0**(スキーマ固定・列選択可)が推奨形式 |
 | **コスト配分タグ** | 明細に「誰の・何のコストか」の属性を付ける。**管理アカウントで有効化 (activate) しないと請求データに現れない** |
 | **Cost Categories** | タグ・アカウント・サービスを組み合わせた独自の集計軸(「これらのアカウント+このタグ=A事業部」) |
 | **AWS Budgets** | 予算の監視とアラート、そして**自動アクション** |
 | **Cost Anomaly Detection** | ML による「いつもと違う支出」の検知(閾値を決めなくてよいのが Budgets との違い) |
 | **Billing Conductor** | 独自レート・グループでの社内請求(プロフォーマ請求書)。MSP や社内転売の特殊要件 |
+| **Cost Optimization Hub** | Compute Optimizer・RI/SP 推奨などの**削減提案を組織横断で1か所に集約**し、削減額で優先順位付け |
 
 ### 定番パイプライン: タグ → CUR → Athena → QuickSight
 
@@ -73,7 +74,7 @@ flowchart LR
 ```mermaid
 flowchart LR
     B["AWS Budgets<br>予算 (実績/予測) を監視"] -->|閾値 50% 超過| N1["SNS / メール通知"]
-    B -->|閾値 80% 超過| N2["Slack 等へエスカレーション<br>(SNS + Chatbot)"]
+    B -->|閾値 80% 超過| N2["Slack 等へエスカレーション<br>(SNS + Amazon Q Developer<br>in chat applications)"]
     B -->|閾値 100% 超過| A["Budgets Actions(自動実行)"]
     A --> A1["制限 SCP を OU に適用"]
     A --> A2["IAM ポリシーで起動権限を剥奪"]

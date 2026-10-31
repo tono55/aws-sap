@@ -6,7 +6,7 @@
 - 購入: On-Demand / **Savings Plans** / RI / **Spot(〜90%引・2分前中断通知)** / Dedicated Host(**BYOL・ソケット単位ライセンス**)/ Dedicated Instance(専有 HW だがライセンス紐付けなし)
 - **プレイスメントグループ**: Cluster(低レイテンシー HPC)/ Spread(分離・AZ 7台)/ Partition(Kafka/HDFS)
 - **IMDSv2 強制**(SSRF 対策)。インスタンスプロファイルでキーレス化
-- CloudWatch アラームアクション: **recover**(システム障害・EBS ブートのみ)/ reboot / stop
+- CloudWatch アラームアクション: **recover**(システム障害・EBS ブートのみ)/ reboot / stop。対応タイプは**簡易自動復旧**が既定で有効
 - Hibernate: RAM を EBS に保存(事前暗号化必須)
 
 ## Auto Scaling
@@ -32,7 +32,7 @@
 - 起動タイプ: EC2(管理必要・DaemonSet 的用途可)/ **Fargate(サーバーレス・既定解)**
 - タスクロール(アプリ権限)と実行ロール(イメージ取得・ログ)の区別
 - ネットワーク: awsvpc モード(タスクごと ENI)
-- **CodeDeploy Blue/Green** 対応。Capacity Provider で Spot 混在
+- **Blue/Green**: ECS ネイティブ(2025年〜、Linear/Canary も可)または CodeDeploy 連携。Capacity Provider で Spot 混在
 - **ECS Anywhere**: オンプレのサーバーでタスク実行
 
 ## EKS
@@ -45,7 +45,7 @@
 ## その他コンピューティング
 
 - **App Runner**: ソース/イメージから Web アプリを最速デプロイ
-- **App2Container**: Java/.NET を自動コンテナ化
+- **App2Container**: Java/.NET を自動コンテナ化(2025年11月に新規受付終了 → AWS Transform)
 - **AWS Batch**: バッチのキュー管理+最適配置(Spot 活用・依存関係)
 - Elastic Beanstalk: アプリだけ持ち込む PaaS(裏は CFn)。デプロイポリシー(All at once/Rolling/Immutable/Blue-Green via swap URL)
 - **Outposts**: AWS のラックをオンプレ設置(**低レイテンシー・データレジデンシー**)

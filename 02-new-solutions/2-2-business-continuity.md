@@ -75,8 +75,8 @@ flowchart TD
 | EBS | スナップショットのクロスリージョンコピー(DLM / AWS Backup で自動化) | スナップショット間隔に依存 |
 | **Aurora** | **Global Database**: ストレージ層の専用レプリケーションで遅延 <1秒。**RPO 1秒 / RTO 1分未満**。write forwarding でセカンダリからの書き込み転送も可 | ほぼゼロ |
 | RDS | クロスリージョンリードレプリカ(障害時に昇格・数分)/ 自動バックアップのクロスリージョンコピー | 非同期・分オーダー |
-| **DynamoDB** | **Global Tables**: マルチリージョン・**マルチライター**(結果整合) | 秒オーダー |
-| ElastiCache Redis | Global Datastore | 秒オーダー |
+| **DynamoDB** | **Global Tables**: マルチリージョン・**マルチライター**。既定は結果整合(MREC)、2025年からは**強い整合性 (MRSC)** も選択可 | 結果整合: 秒オーダー / MRSC: **RPO ゼロ** |
+| ElastiCache (Valkey / Redis OSS) | Global Datastore | 秒オーダー |
 | EFS | EFS Replication | 分オーダー |
 | ECR / KMS | クロスリージョンレプリケーション設定 / マルチリージョンキー | — |
 | **EC2 サーバー一式** | **AWS Elastic Disaster Recovery (DRS)**: OS ごとブロックレベルで継続レプリケーション。**RPO 秒・RTO 分** | 秒 |
@@ -90,7 +90,7 @@ flowchart TD
 - **Route 53 Failover ルーティング + ヘルスチェック**: 標準解。プライマリの異常を検知したらセカンダリの IP を返す。ただし **DNS はキャッシュされる**ため、TTL を短くしても切替の完全伝播には時間がかかり、行儀の悪いクライアント(TTL 無視)には効かない
 - **Global Accelerator**: Anycast の静的 IP 2個を入口にし、**AWS 側でエンドポイントを切り替える**ため DNS キャッシュの影響を受けない。**数十秒での確実な切替**と「顧客のファイアウォールに固定 IP を登録済み」という要件に対応
 - **Route 53 ARC**: ヘルスチェック(自動判定)に任せず、**ルーティングコントロール**という明示的なスイッチで切替を制御。誤検知による意図しないフェイルオーバーを防ぎたい、切替判断を人間・手順に委ねたい金融系シナリオで登場
-- DB 層は **Aurora Global Database のマネージド(計画)フェイルオーバー**(計画切替はデータロスなし)など、各サービスの切替機能を併用
+- DB 層は **Aurora Global Database の切替機能**を併用する。計画的な切替は **switchover**(旧称 managed planned failover。レプリケーション完了を待つのでデータロスなし)、リージョン障害時は **failover**(旧称 unplanned failover。未複製分のロスを許容して即昇格)。用語が 2023年に改称されたので、問題文の表現が揺れても意味で判断する
 
 ```mermaid
 flowchart TD
@@ -99,7 +99,7 @@ flowchart TD
     Q1 -->|いいえ| Q2{"切替の確実性・手動制御が<br>極めて重要?(金融系など)"}
     Q2 -->|はい| ARC["Route 53 ARC<br>(ルーティングコントロール)"]
     Q2 -->|いいえ| Q3{"DB 層の切替?"}
-    Q3 -->|はい| AUR["Aurora Global Database の<br>managed failover"]
+    Q3 -->|はい| AUR["Aurora Global Database の<br>switchover / failover"]
     Q3 -->|いいえ| R53["Route 53 Failover ルーティング<br>+ ヘルスチェック(標準解)"]
 ```
 
@@ -111,6 +111,7 @@ Route 53 ヘルスチェックにはもうひとつ制約があります: チェ
 
 - EBS/EC2/RDS/Aurora/DynamoDB/EFS/FSx/Storage Gateway/VMware などを**1つのバックアップ計画**で管理し、**クロスリージョン・クロスアカウントコピー**で隔離保管
 - **Backup Vault Lock**(WORM): バックアップの削除・変更を**管理者にも**禁止する。ランサムウェア(攻撃者は本番データより先にバックアップを消しに来る)対策の決定打
+- **論理的にエアギャップされたボールト (logically air-gapped vault)**: AWS 管理のアカウントにロック済みで保管され、RAM で別アカウントと共有して**本番アカウントが丸ごと侵害されても別アカウントから直接復元**できる。「アカウント侵害を前提にしたバックアップ隔離」の新しい定番
 - **Organizations のバックアップポリシー**で全アカウントに計画を強制(1-4 のポリシータイプの一つ)
 - **復元テスト機能**で「復元できること」を定期・自動で検証 — 「復旧手順をテストする」原則の直接実装
 - RDS の自動バックアップは最大 **35日**。それを超える保持要件(規制の7年保管など)は AWS Backup かスナップショットの長期保管で満たす
@@ -129,7 +130,7 @@ Route 53 ヘルスチェックにはもうひとつ制約があります: チェ
 
 - **RPO 秒・RTO 分のクロスリージョン RDBMS は Aurora Global Database 一択** — 専用ストレージレプリケーションだから達成できる。通常の RDS クロスリージョンレプリカは昇格に数分+非同期遅延
 - **Pilot Light の EC2 実装は DRS(Elastic Disaster Recovery)** — 継続ブロックレプリケーション+低コストなステージング領域という特性が Pilot Light の定義に合致
-- **DynamoDB Global Tables は結果整合のマルチライター** — 「クロスリージョンで強い整合性の書き込み」はできない。競合は last-writer-wins
+- **DynamoDB Global Tables は既定で結果整合のマルチライター(競合は last-writer-wins)** — ただし 2025年に **マルチリージョン強い整合性 (MRSC)** が GA になり、3リージョン構成(または 2リージョン + witness)で RPO ゼロ・強い整合性読み取りを選べるようになった。古い教材の「Global Tables は強い整合性不可」という記述は現在では誤り。書き込みレイテンシーが増えるトレードオフも合わせて覚える
 - **DNS フェイルオーバーはキャッシュに勝てない** — TTL 無視クライアント・固定 IP 要件が出たら Global Accelerator
 - **Route 53 ヘルスチェックはプライベートリソースを直接見られない** — チェッカーはインターネット側にいる。CloudWatch アラーム連動型で代替
 - **バックアップの削除防止は Backup Vault Lock** — 「ランサムウェア」「管理者でも消せない」がキーワード。S3 なら Object Lock(Compliance モード)

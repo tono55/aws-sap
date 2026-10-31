@@ -20,7 +20,7 @@
 |---|---|---|
 | 分散システム全体 | **X-Ray** | サービスマップでどの区間(サービス間呼び出し)が遅いか |
 | EC2 / コンテナ | CloudWatch メトリクス | CPU・メモリ(Agent)・ネットワーク・I/O の飽和 |
-| DB | **RDS Performance Insights** | **待機イベントとトップ SQL** — 「DB が遅い」を「このクエリのこの待ち」まで分解 |
+| DB | **RDS Performance Insights** / **CloudWatch Database Insights** | **待機イベントとトップ SQL** — 「DB が遅い」を「このクエリのこの待ち」まで分解(Performance Insights の機能は CloudWatch Database Insights へ統合が進んでいる。試験ではどちらの名前でも「DB の待機イベント分析」と読む) |
 | ストレージ | CloudWatch(IOPS/スループット/キュー深度) | EBS の上限到達、バースト残高の枯渇 |
 | フロントエンド | CloudWatch RUM / Synthetics | 実ユーザー体感・外形での応答時間 |
 | コスト対性能 | **Compute Optimizer** | ML ベースの過剰/過小プロビジョニング判定 |

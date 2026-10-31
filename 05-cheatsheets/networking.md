@@ -37,16 +37,17 @@ flowchart TD
 
 ## Direct Connect
 
-- 専用: 1/10/100/400 Gbps。ホスト: 50 Mbps〜10 Gbps。**開通に数週間以上**
+- 専用: 1/10/100/400 Gbps。ホスト: 50 Mbps〜(10 Gbps 超のプランもあり)。**開通に数週間以上**
 - VIF 3種: **Private**(VPC)/ **Public**(AWS パブリックサービス)/ **Transit**(DX GW→TGW)
 - **DX Gateway**: 複数リージョンの VGW/TGW へ。**VPC 間の推移的通信は不可**
-- **暗号化されない** → 必要なら DX 上の VPN or MACsec
+- **暗号化されない** → 必要なら DX 上の VPN(Public VIF / Transit VIF 経由のプライベート IP VPN)or MACsec(10/100/400 Gbps)
+- **SiteLink**: DX ロケーション間で拠点同士を AWS 網経由で直結
 - 冗長化: DX + VPN バックアップ(安価)/ DX×2 拠点(最高 SLA)
 - BFD で高速障害検知
 
 ## Site-to-Site VPN
 
-- 1接続 = 2トンネル、トンネルあたり **最大 1.25 Gbps**(TGW+ECMP で束ねる)
+- 1接続 = 2トンネル、標準トンネルは **最大 1.25 Gbps**(TGW+ECMP で束ねる)。2025年11月〜 TGW/Cloud WAN 接続では **5 Gbps トンネル**も選択可
 - Accelerated VPN(Global Accelerator 経由)
 
 ## Route 53
@@ -56,7 +57,8 @@ flowchart TD
 - ヘルスチェック: パブリックエンドポイント対象。プライベートは **CloudWatch アラーム連動**で代替
 - **Resolver**: Inbound(オンプレ→AWS)/ Outbound(AWS→オンプレ)+ 転送ルール(RAM 共有可)
 - DNSSEC 対応。クエリログ取得可
-- **ARC (Application Recovery Controller)**: 確実な手動フェイルオーバー・readiness check
+- **ARC (Application Recovery Controller)**: 確実な手動フェイルオーバー(ルーティングコントロール)・readiness check・**zonal shift / autoshift**(AZ 退避)・Region switch
+- **Route 53 Profiles**: PHZ・Resolver ルール等の DNS 設定を束ねて RAM で多数 VPC に共有
 
 ## CloudFront
 
@@ -86,7 +88,7 @@ flowchart TD
 
 ## 数値・制限の要点
 
-- VPN トンネル: 1.25 Gbps/本
+- VPN トンネル: 1.25 Gbps/本(大容量トンネルは 5 Gbps)
 - VPC Peering: 推移なし・CIDR 重複不可
 - NAT GW: AZ 障害対策で **AZ ごとに配置**、〜100 Gbps/個
 - プレイスメントグループ Spread: AZ あたり 7 インスタンス

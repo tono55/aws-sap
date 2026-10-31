@@ -11,7 +11,8 @@
 - 暗号化: SSE-S3(既定)/ SSE-KMS(+Bucket Key でコスト減)/ SSE-C / クライアントサイド
 - イベント: EventBridge 連携(フィルタ強力)/ S3 通知(SQS/SNS/Lambda)
 - **S3 Batch Operations**: 既存オブジェクト一括処理(コピー・タグ・Lambda・リストア)
-- Transfer Acceleration(遠隔アップロード)/ **Multi-Region Access Points** / Object Lambda(取得時変換)
+- Transfer Acceleration(遠隔アップロード)/ **Multi-Region Access Points** / Object Lambda(取得時変換。2025年11月に新規受付終了)
+- **S3 Express One Zone**: 単一 AZ・1桁ミリ秒の高性能クラス(ディレクトリバケット)
 - Storage Lens(組織全体の使用状況分析)
 
 ## EBS
@@ -31,7 +32,7 @@
 ## EFS
 
 - NFS・**マルチ AZ 標準(One Zone もあり)**・数千同時マウント・Linux のみ
-- パフォーマンスモード: General Purpose / Max I/O(超並列・レイテンシー増)
+- パフォーマンスモード: General Purpose(推奨)/ Max I/O(超並列・レイテンシー増・現在は非推奨寄り)
 - スループットモード: Bursting / Provisioned / **Elastic(スパイク対応・既定解化)**
 - **EFS-IA / Archive + ライフサイクル**でコスト削減
 - アクセスポイント(アプリ別 root/権限)。**クロスリージョンレプリケーション対応**
@@ -71,7 +72,7 @@ flowchart TD
 ## AWS Backup
 
 - 対象: EBS/EC2/RDS/Aurora/DynamoDB/EFS/FSx/Storage Gateway/VMware 等を一元管理
-- **クロスリージョン・クロスアカウントコピー**、**Backup Vault Lock(WORM)**
+- **クロスリージョン・クロスアカウントコピー**、**Backup Vault Lock(WORM)**、**論理エアギャップボールト**(アカウント侵害時も別アカウントから復元)
 - **Organizations のバックアップポリシーで全社強制**
 - 復元テスト機能(定期検証)
 

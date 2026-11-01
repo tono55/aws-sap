@@ -21,7 +21,7 @@ Rehost で AWS に移しただけのシステムは、動く場所が変わっ�
 
 | サービス | 使いどころ |
 |---|---|
-| **App2Container (A2C)** | 既存の **Java/.NET アプリを、コード変更なしで自動コンテナ化**(解析 → Dockerfile 生成 → ECS/EKS 用成果物まで) |
+| **App2Container (A2C)** | 既存の **Java/.NET アプリを、コード変更なしで自動コンテナ化**(解析 → Dockerfile 生成 → ECS/EKS 用成果物まで)。2025年11月に新規受付を終了し、.NET のモダナイズは AWS Transform for .NET が後継。試験では「コード変更なしのコンテナ化 = A2C」の対応で出る |
 | **App Runner** | Web アプリ/API を最小の設定でデプロイ(インフラの概念がほぼ不要) |
 | **ECS + Fargate** | AWS ネイティブのオーケストレーション + サーバーレス実行。**運用負荷最小の既定解** |
 | **EKS** | **Kubernetes 資産・エコシステムが前提**にあるとき(Helm、operator、社内標準が K8s 等) |
@@ -87,8 +87,8 @@ flowchart TB
 - **データレイクの標準構成**: **S3(ストレージ)+ Glue(カタログ・ETL)+ Athena(クエリ)+ QuickSight(可視化)**。計算と保存を分離し、保存は S3 の単価で、計算は使った分だけ
 - 権限管理が複雑化したら **Lake Formation**(行・列レベルのアクセス制御、クロスアカウント共有)
 - オンプレ Hadoop → **EMR**(または Glue ETL へ)。DWH → **Redshift**(+Spectrum で S3 直接クエリ)
-- リアルタイム化 → Kinesis Data Streams / **Firehose**(S3 へのニアリアルタイム配信)/ MSK
-- メインフレーム → **AWS Mainframe Modernization**(リプラットフォーム/自動リファクタリングの専用サービス)
+- リアルタイム化 → Kinesis Data Streams / **Amazon Data Firehose**(S3 へのニアリアルタイム配信)/ MSK
+- メインフレーム → **AWS Mainframe Modernization**(リプラットフォーム/自動リファクタリングの専用サービス)。ただしマネージド版は 2025年11月7日に新規顧客の受付を終了し、現在は **AWS Transform for mainframe**(生成 AI による COBOL 解析・Java への変換)とセルフマネージド版が案内されている
 
 ## モダナイゼーションの道筋 — 全部を一度にやらない
 
@@ -107,8 +107,7 @@ flowchart LR
 
 **シナリオ**: EC2 に Rehost 済みの .NET モノリス(IIS)+ SQL Server。経営方針は「ライセンス費の削減と、リリース頻度の向上」。開発チームは小規模で、K8s の経験はない。段階的な計画は?
 
-**解き方**: ライセンスは2つある(Windows/IIS と SQL Server)。DB は **Babelfish for Aurora PostgreSQL** で T-SQL 互換のまま脱ライセンス(SCT+DMS で移行、アプリ改修最小)。アプリは **App2Container** でコンテナ化し(コード変更なし)、**ECS + Fargate** へ(K8s 経験がないので EKS を選ばない)。リリース頻度向上は、コンテナ化 + CodePipeline の CI/CD で実現し、大きな機能は Strangler Fig で順次 .NET Core / Linux コンテナ化してWindows ライセンスからも脱却 — という多段計画。1ステップで全部を解決する選択肢(「EKS で全面マイクロサービス化」)は、チーム規模・経験と釣り合わず過剰
-。
+**解き方**: ライセンスは2つある(Windows/IIS と SQL Server)。DB は **Babelfish for Aurora PostgreSQL** で T-SQL 互換のまま脱ライセンス(SCT+DMS で移行、アプリ改修最小)。アプリは **App2Container** でコンテナ化し(コード変更なし)、**ECS + Fargate** へ(K8s 経験がないので EKS を選ばない)。リリース頻度向上は、コンテナ化 + CodePipeline の CI/CD で実現し、大きな機能は Strangler Fig で順次 .NET(旧 .NET Core)/ Linux コンテナ化して Windows ライセンスからも脱却 — という多段計画(.NET Framework からの移植には AWS Transform for .NET も使える)。1ステップで全部を解決する選択肢(「EKS で全面マイクロサービス化」)は、チーム規模・経験と釣り合わず過剰。
 
 **シナリオ**: 夜間に EC2 常駐の cron が 200 本のバッチを順に実行しており、1本の失敗が後続全部を止める。改善は?
 

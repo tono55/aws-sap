@@ -32,6 +32,7 @@ Associate レベルの基礎知識は既知として、Professional 特有の内
 | パート | 内容 |
 |---|---|
 | [00-exam-guide](./00-exam-guide/README.md) | 試験範囲の詳細(タスクステートメント・対象サービス一覧) |
+| [サービス提供状況の変化](./00-exam-guide/README.md#サービス提供状況の変化20242026年-古い教材とのズレに注意) | 2024〜2026年に終了・新規受付停止・改称したサービスと主な機能追加(古い問題集とのズレ対策) |
 | [学習リソース集](./00-exam-guide/resources.md) | 公式教材・日本語リソース・模試・ハンズオンのリンク集(用途の解説付き) |
 | [01-organizational-complexity](./01-organizational-complexity/README.md) | Domain 1: ネットワーク接続・セキュリティ統制・信頼性・マルチアカウント・コスト |
 | [02-new-solutions](./02-new-solutions/README.md) | Domain 2: デプロイ戦略・事業継続性・セキュリティ・信頼性・性能・コスト |

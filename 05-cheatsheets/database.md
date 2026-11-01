@@ -15,8 +15,8 @@
 
 - ストレージ 6重化(3AZ)・最大 128TB 自動拡張・レプリカ最大15(**同一ストレージ参照でラグ極小**)
 - エンドポイント: クラスター(書き込み)/ **リーダー**(読み取り LB)/ カスタム
-- **Global Database**: RPO 1秒・RTO <1分・最大5セカンダリリージョン・**write forwarding**
-- **Aurora Serverless v2**: 秒単位スケール(変動・断続負荷)
+- **Global Database**: RPO 1秒・RTO <1分・複数セカンダリリージョン・**write forwarding**。計画切替は **switchover**(ロスなし)、障害時は **failover**
+- **Aurora Serverless v2**: 秒単位スケール(変動・断続負荷)。0 ACU への自動一時停止に対応
 - Backtrack (MySQL): 巻き戻し(リストア不要)
 - **Babelfish**: SQL Server 互換(T-SQL/TDS)で Aurora PostgreSQL へ
 - zero-ETL to Redshift(分析オフロード)
@@ -26,7 +26,7 @@
 - パーティションキー設計が性能の要(ホットキー回避)。項目 **400KB 上限**
 - 容量: **On-Demand**(予測不能)/ プロビジョンド + Auto Scaling(定常)
 - **DAX**: マイクロ秒キャッシュ(API 互換・コード変更最小)
-- **Global Tables**: マルチリージョン・マルチライター(結果整合・競合は last writer wins)
+- **Global Tables**: マルチリージョン・マルチライター。既定は結果整合(競合は last writer wins)、2025年〜 **強い整合性 (MRSC)** も選択可(RPO ゼロ)
 - **DynamoDB Streams**: 変更イベント → Lambda(CDC・イベント駆動)
 - TTL(自動削除・無料)、S3 エクスポート、PITR(35日)
 - トランザクション対応。強い整合性読み取りは GSI 不可
@@ -34,10 +34,10 @@
 
 ## ElastiCache
 
-- **Redis**: レプリケーション・永続化・Sorted Set(ランキング)・Pub/Sub・**Global Datastore**(クロスリージョン)・クラスタモード(シャーディング)
+- **Valkey / Redis OSS**(Valkey が推奨・安価): レプリケーション・永続化・Sorted Set(ランキング)・Pub/Sub・**Global Datastore**(クロスリージョン)・クラスタモード(シャーディング)
 - **Memcached**: マルチスレッド・シンプル・永続化なし
 - 戦略: Lazy Loading(stale リスク)/ Write-Through(常に新鮮)+ TTL
-- **MemoryDB**: Redis 互換の**永続プライマリ DB**(マルチ AZ トランザクションログ)
+- **MemoryDB**: Valkey/Redis OSS 互換の**永続プライマリ DB**(マルチ AZ トランザクションログ)
 
 ## Redshift
 
@@ -54,8 +54,8 @@
 | **Neptune** | グラフ(SNS 関係性・レコメンド・不正検知) |
 | **DocumentDB** | MongoDB 互換 |
 | **Keyspaces** | Cassandra 互換 |
-| **Timestream** | 時系列(IoT メトリクス) |
-| **QLDB** | 台帳(暗号学的検証可能な変更履歴) |
+| **Timestream** | 時系列(IoT メトリクス)。新規は Timestream for InfluxDB |
+| ~~QLDB~~ | 台帳(暗号学的検証可能な変更履歴)。**2025年7月31日にサポート終了** — 新規設計なら Aurora PostgreSQL(監査テーブル)等。古い問題では正解肢として残る |
 | OpenSearch | 全文検索・ログ分析(+ UltraWarm 階層) |
 | Athena | S3 への SQL(サーバーレス・スキャン課金) |
 
@@ -75,7 +75,7 @@ flowchart TD
     Q1 -->|"ドキュメント (MongoDB)"| DOC["DocumentDB"]
     Q1 -->|"グラフ(関係性探索)"| NEP["Neptune"]
     Q1 -->|時系列| TS["Timestream"]
-    Q1 -->|"台帳(改ざん検証)"| QLDB["QLDB"]
+    Q1 -->|"台帳(改ざん検証)"| QLDB["QLDB(サポート終了)<br>→ Aurora PostgreSQL 等"]
     Q1 -->|"全文検索・ログ"| OS["OpenSearch"]
     Q1 -->|"S3 上のデータに SQL"| ATH["Athena"]
 ```

@@ -9,7 +9,7 @@
 - **サブスクリプションフィルタ**: Logs → Kinesis/Firehose/Lambda(クロスアカウント集約)
 - Logs Insights(クエリ)・保持期間設定(既定は無期限=コスト注意)
 - クロスアカウントオブザーバビリティ(モニタリングアカウント)
-- **Synthetics**(外形監視)/ RUM / Evidently / **X-Ray**(分散トレース)
+- **Synthetics**(外形監視)/ RUM / **X-Ray**(分散トレース)/ Application Signals(APM)/ Database Insights(DB 性能)
 
 ## CloudTrail
 
@@ -48,7 +48,7 @@
 - **Control Tower**: ランディングゾーン + ガードレール + Account Factory
 - **License Manager**: ライセンス追跡・BYOL 管理
 - **Trusted Advisor**: コスト/性能/セキュリティ/耐障害性/クォータのチェック(フル機能は Business 以上)
-- **Compute Optimizer**: ML ベースのライトサイジング(EC2/ASG/EBS/Lambda)
+- **Compute Optimizer**: ML ベースのライトサイジング(EC2/ASG/EBS/Lambda/ECS on Fargate/RDS)+ アイドル検出
 - **Service Quotas**: クォータ管理(**アカウント×リージョン単位**・DR 側も忘れず)
 - **Health Dashboard**: AWS 側の障害・メンテ通知(EventBridge 連携で自動対応)
 - **Well-Architected Tool**: ワークロードのレビュー
@@ -66,6 +66,8 @@
 | **Cost Anomaly Detection** | ML で急増検知 |
 | Billing Conductor | 独自レートの請求グループ |
 | Instance Scheduler | 非本番の夜間週末停止 |
+| Cost Optimization Hub | 削減提案を組織横断で集約・優先順位付け |
+| Data Exports (CUR 2.0) | CUR の現行形式 |
 
 ## 購入オプション早見
 
@@ -74,4 +76,5 @@
 - Convertible RI: 交換可・〜66%
 - **Spot**: 〜90%・2分通知・中断耐性必須
 - Capacity Reservation: 確保のみ(割引なし・RI と併用可)
+- **Database Savings Plans**(2025年12月〜): 複数 DB サービス横断のコミット割引(〜35%)
 - RI/SP は**組織で共有**(無効化可)
